@@ -44,13 +44,17 @@ public:
     {
         auto best_solution = Solution{BIN_WEIGHT_LIMIT, GARBAGE_BAGS};
 
-        for (auto _ : range(1000))
+        while (true)
         {
             auto new_solution = swap_random_adjacent_bag_pair(best_solution);
 
             if (new_solution.get_filled_bin_count() <= best_solution.get_filled_bin_count())
             {
                 best_solution = new_solution;
+            }
+            else
+            {
+                break;
             }
         }
 
