@@ -1,11 +1,9 @@
 #include <vector>
 
-auto range(int len)
-{
+auto range(int len) {
     auto v = std::vector<int>{};
 
-    for (int i = 0; i < len; i++)
-    {
+    for (int i = 0; i < len; i++) {
         v.push_back(i);
     }
 

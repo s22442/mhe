@@ -1,7 +1,7 @@
-#include <vector>
-#include <random>
-#include "../utils.h"
 #include "../Solution.h"
+#include "../utils.h"
+#include <random>
+#include <vector>
 
 const auto BIN_WEIGHT_LIMIT = 100;
 
@@ -24,11 +24,9 @@ std::mt19937 rgen(rd());
 
 const auto garbage_bag_count = GARBAGE_BAGS.size();
 
-class SolutionFactory
-{
+class SolutionFactory {
 private:
-    auto swap_random_adjacent_bag_pair(Solution solution)
-    {
+    auto swap_random_adjacent_bag_pair(Solution solution) {
         std::uniform_int_distribution<int> distr(0, garbage_bag_count - 1);
 
         auto random_index = distr(rgen);
@@ -40,20 +38,15 @@ private:
     }
 
 public:
-    auto generate_hillclimbing_solution()
-    {
+    auto generate_hillclimbing_solution() {
         auto best_solution = Solution{BIN_WEIGHT_LIMIT, GARBAGE_BAGS};
 
-        while (true)
-        {
+        while (true) {
             auto new_solution = swap_random_adjacent_bag_pair(best_solution);
 
-            if (new_solution.get_filled_bin_count() <= best_solution.get_filled_bin_count())
-            {
+            if (new_solution.get_filled_bin_count() <= best_solution.get_filled_bin_count()) {
                 best_solution = new_solution;
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
@@ -62,8 +55,7 @@ public:
     }
 };
 
-int main()
-{
+int main() {
     auto solution_factory = SolutionFactory{};
 
     auto hillclimbing_solution = solution_factory.generate_hillclimbing_solution();
