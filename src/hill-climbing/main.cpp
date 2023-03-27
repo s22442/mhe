@@ -1,5 +1,6 @@
 #include "../Solution.h"
 #include "../utils.h"
+#include <algorithm>
 #include <random>
 #include <vector>
 
@@ -51,25 +52,12 @@ private:
         return solution;
     }
 
-    auto swap_random_bag_with_best_neighbor(Solution solution) {
-        auto random_index = this->generate_random_bag_index();
+    auto get_best_neighbor(Solution solution) {
+        auto neighbors = solution.generate_neighbors();
 
-        auto best_solution = solution;
-
-        for (auto i : range(garbage_bag_count)) {
-            if (i == random_index) {
-                continue;
-            }
-
-            auto new_solution = solution;
-            new_solution.swap_garbage_bags(random_index, i);
-
-            if (new_solution.get_filled_bin_count() < best_solution.get_filled_bin_count()) {
-                best_solution = new_solution;
-            }
-        }
-
-        return best_solution;
+        return *std::max_element(neighbors.begin(), neighbors.end(), [](auto a, auto b) {
+            return a.get_filled_bin_count() > b.get_filled_bin_count();
+        });
     }
 
 public:
@@ -80,7 +68,7 @@ public:
             auto new_solution = swap_random_adjacent_bag_pair(best_solution);
 
             if (new_solution.get_filled_bin_count() <= best_solution.get_filled_bin_count()) {
-                best_solution = new_solution;
+                best_solution = std::move(new_solution);
             } else {
                 break;
             }
@@ -89,14 +77,14 @@ public:
         return best_solution;
     }
 
-    auto generate_best_neighbor_hillclimbing_solution() {
+    auto generate_deterministic_hillclimbing_solution() {
         auto best_solution = Solution{BIN_WEIGHT_LIMIT, GARBAGE_BAGS};
 
         while (true) {
-            auto new_solution = swap_random_bag_with_best_neighbor(best_solution);
+            auto new_solution = get_best_neighbor(best_solution);
 
             if (new_solution.get_filled_bin_count() < best_solution.get_filled_bin_count()) {
-                best_solution = new_solution;
+                best_solution = std::move(new_solution);
             } else {
                 break;
             }
@@ -110,7 +98,7 @@ int main() {
     auto solution_factory = SolutionFactory{};
 
     std::cout
-        << "Random hill climbing solution: "
+        << "Random hill climbing solution:"
         << std::endl
         << solution_factory.generate_random_hillclimbing_solution()
         << std::endl;
@@ -118,9 +106,9 @@ int main() {
     std::cout << std::endl;
 
     std::cout
-        << "Best neighbor hill climbing solution: "
+        << "Deterministic hill climbing solution:"
         << std::endl
-        << solution_factory.generate_best_neighbor_hillclimbing_solution()
+        << solution_factory.generate_deterministic_hillclimbing_solution()
         << std::endl;
 
     return 0;

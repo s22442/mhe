@@ -1,5 +1,8 @@
 #include <vector>
 
+#ifndef UTILS_H
+#define UTILS_H
+
 auto range(int len) {
     auto v = std::vector<int>{};
 
@@ -9,3 +12,5 @@ auto range(int len) {
 
     return v;
 }
+
+#endif // UTILS_H
