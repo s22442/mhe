@@ -32,14 +32,15 @@ const auto GARBAGE_BAGS = std::vector<GarbageBag>{
     GarbageBag(30),
 };
 
+const auto garbage_bag_count = GARBAGE_BAGS.size();
+
 std::random_device rd;
 std::mt19937 rgen(rd());
-const auto garbage_bag_count = GARBAGE_BAGS.size();
-std::uniform_int_distribution<int> distr(0, garbage_bag_count - 1);
 
 class SolutionFactory {
 private:
     auto generate_random_bag_index() {
+        std::uniform_int_distribution<int> distr(0, garbage_bag_count - 1);
         return distr(rgen);
     }
 
@@ -94,8 +95,16 @@ public:
     }
 };
 
-int main() {
+int main(int argc, char *argv[]) {
     auto solution_factory = SolutionFactory{};
+
+    if (argc >= 2) {
+        std::cout
+            << "No args allowed!"
+            << std::endl;
+
+        return 0;
+    }
 
     std::cout
         << "Random hill climbing solution:"

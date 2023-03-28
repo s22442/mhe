@@ -8,19 +8,8 @@
 
 const auto BIN_WEIGHT_LIMIT = 100;
 
-// best possible bin count: 8
+// best possible bin count: 4
 const auto GARBAGE_BAGS = std::vector<GarbageBag>{
-    GarbageBag(48),
-    GarbageBag(30),
-    GarbageBag(36),
-    GarbageBag(19),
-    GarbageBag(36),
-    GarbageBag(27),
-    GarbageBag(42),
-    GarbageBag(42),
-    GarbageBag(36),
-    GarbageBag(24),
-    GarbageBag(30),
     GarbageBag(48),
     GarbageBag(30),
     GarbageBag(36),
@@ -34,6 +23,10 @@ const auto GARBAGE_BAGS = std::vector<GarbageBag>{
     GarbageBag(30),
 };
 
+auto is_tabu_infinite(int tabu_size) -> bool {
+    return tabu_size <= 0;
+}
+
 class SolutionFactory {
 public:
     auto generate_tabu_search_solution(int tabu_size, bool backtracking = false) {
@@ -43,7 +36,7 @@ public:
         auto tabu = std::set<GarbageBags>{current_solution.get_garbage_bags()};
         auto previous_solutions = std::vector<Solution>{current_solution};
 
-        while (tabu_size <= 0 || tabu.size() < tabu_size) {
+        while (is_tabu_infinite(tabu_size) || tabu.size() < tabu_size) {
             auto neighbors = current_solution.generate_neighbors();
 
             neighbors.erase(
@@ -87,9 +80,30 @@ public:
 int main(int argc, char *argv[]) {
     auto solution_factory = SolutionFactory{};
 
-    // tabu not greater than 0 means infinite tabu
-    // you may also want to comment out some bags before trying infinite tabu
-    auto tabu_size = argc >= 2 ? std::stoi(argv[1]) : -1;
+    auto tabu_size = -1;
+
+    if (argc >= 2) {
+        if (std::string{argv[1]} == "help") {
+            std::cout
+                << "Args:"
+                << std::endl
+                << "1. Size of tabu. Tabu not greater than 0 means infinite tabu."
+                << std::endl
+                << "   Default: " << tabu_size
+                << std::endl;
+
+            return 0;
+        } else {
+            tabu_size = std::stoi(argv[1]);
+        }
+    }
+
+    if (is_tabu_infinite(tabu_size)) {
+        std::cout
+            << "Infinite tabu takes a while. Sit back and relax!"
+            << std::endl
+            << std::endl;
+    }
 
     std::cout
         << "Tabu search solution:"
