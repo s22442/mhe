@@ -36,11 +36,12 @@ const auto GARBAGE_BAGS = std::vector<GarbageBag>{
 
 class SolutionFactory {
 public:
-    auto generate_tabu_search_solution(int tabu_size) {
+    auto generate_tabu_search_solution(int tabu_size, bool backtracking = false) {
         auto current_solution = Solution{BIN_WEIGHT_LIMIT, GARBAGE_BAGS};
         auto best_solution = current_solution;
 
         auto tabu = std::set<GarbageBags>{current_solution.get_garbage_bags()};
+        auto previous_solutions = std::vector<Solution>{current_solution};
 
         while (tabu_size <= 0 || tabu.size() < tabu_size) {
             auto neighbors = current_solution.generate_neighbors();
@@ -49,33 +50,35 @@ public:
                 std::remove_if(
                     neighbors.begin(),
                     neighbors.end(),
-                    [&](Solution x) { return tabu.contains(x.get_garbage_bags()); }),
+                    [&](Solution neighbor) { return tabu.contains(neighbor.get_garbage_bags()); }),
                 neighbors.end());
 
             if (neighbors.size() == 0) {
-                std::cout << "Ate my tail..." << std::endl;
-                return best_solution;
+                if (!backtracking || previous_solutions.size() == 0) {
+                    return best_solution;
+                }
+
+                current_solution = previous_solutions.back();
+                previous_solutions.pop_back();
+
+                continue;
             }
 
-            auto new_solution = *std::max_element(neighbors.begin(), neighbors.end(), [](auto a, auto b) {
-                return a.get_filled_bin_count() > b.get_filled_bin_count();
-            });
+            auto new_solution = *std::max_element(
+                neighbors.begin(),
+                neighbors.end(),
+                [](auto a, auto b) {
+                    return a.get_filled_bin_count() > b.get_filled_bin_count();
+                });
 
             if (new_solution.get_filled_bin_count() <= best_solution.get_filled_bin_count()) {
                 best_solution = new_solution;
             }
 
             tabu.insert(new_solution.get_garbage_bags());
+            previous_solutions.push_back(new_solution);
             current_solution = std::move(new_solution);
         }
-
-        return best_solution;
-    }
-
-    auto generate_tabu_search_with_backtracking_solution(int tabu_size) {
-        auto best_solution = Solution{BIN_WEIGHT_LIMIT, GARBAGE_BAGS};
-
-        // TODO
 
         return best_solution;
     }
@@ -99,7 +102,7 @@ int main(int argc, char *argv[]) {
     std::cout
         << "Tabu search with backtracking solution:"
         << std::endl
-        << solution_factory.generate_tabu_search_with_backtracking_solution(tabu_size)
+        << solution_factory.generate_tabu_search_solution(tabu_size, true)
         << std::endl;
 
     return 0;
