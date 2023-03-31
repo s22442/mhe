@@ -51,10 +51,10 @@ public:
             } else {
                 std::uniform_real_distribution<double> distr(0.0, 1.0);
                 if (
-                    distr(rgen) < std::exp(
-                                      -std::abs(
-                                          new_solution.get_filled_bin_count() - current_solution.get_filled_bin_count()) /
-                                      temperature_cb(i))) {
+                    distr(_solution_rgen) < std::exp(
+                                                -std::abs(
+                                                    new_solution.get_filled_bin_count() - current_solution.get_filled_bin_count()) /
+                                                temperature_cb(i))) {
                     current_solution = new_solution;
                 }
             }

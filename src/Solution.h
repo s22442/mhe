@@ -9,8 +9,8 @@
 
 using GarbageBags = std::vector<GarbageBag>;
 
-std::random_device rd;
-std::mt19937 rgen(rd());
+auto _solution_rd = std::random_device{};
+auto _solution_rgen = std::mt19937{_solution_rd()};
 
 class Solution {
 private:
@@ -18,8 +18,11 @@ private:
     GarbageBags garbage_bags;
 
     auto generate_random_bag_index() {
-        std::uniform_int_distribution<int> distr(0, this->garbage_bags.size() - 1);
-        return distr(rgen);
+        auto distr = std::uniform_int_distribution<int>{
+            0,
+            (int)this->garbage_bags.size() - 1};
+
+        return distr(_solution_rgen);
     }
 
 public:
