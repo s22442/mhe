@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <list>
 #include <map>
-#include <random>
 #include <set>
 #include <vector>
 
@@ -35,26 +34,7 @@ const auto GARBAGE_BAGS = std::vector<GarbageBag>{
     GarbageBag(30),
 };
 
-const auto garbage_bag_count = GARBAGE_BAGS.size();
-
-std::random_device rd;
-std::mt19937 rgen(rd());
-
 class SolutionFactory {
-private:
-    auto generate_random_bag_index() {
-        std::uniform_int_distribution<int> distr(0, garbage_bag_count - 1);
-        return distr(rgen);
-    }
-
-    auto swap_random_adjacent_bag_pair(Solution solution) {
-        auto random_index = this->generate_random_bag_index();
-        auto next_index = (random_index + 1) % garbage_bag_count;
-
-        solution.swap_garbage_bags(random_index, next_index);
-
-        return solution;
-    }
 
 public:
     auto generate_simulated_annealing_solution(int iteration_count, std::function<double(int)> temperature_cb) {
@@ -62,7 +42,7 @@ public:
         auto best_solution = current_solution;
 
         for (auto i : range(iteration_count)) {
-            auto new_solution = this->swap_random_adjacent_bag_pair(current_solution);
+            auto new_solution = current_solution.generate_random_neighbor();
             if (new_solution.get_filled_bin_count() <= current_solution.get_filled_bin_count()) {
                 current_solution = new_solution;
                 if (new_solution.get_filled_bin_count() <= best_solution.get_filled_bin_count()) {

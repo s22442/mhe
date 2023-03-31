@@ -1,7 +1,6 @@
 #include "../Solution.h"
 #include "../utils.h"
 #include <algorithm>
-#include <random>
 #include <vector>
 
 const auto BIN_WEIGHT_LIMIT = 100;
@@ -32,27 +31,8 @@ const auto GARBAGE_BAGS = std::vector<GarbageBag>{
     GarbageBag(30),
 };
 
-const auto garbage_bag_count = GARBAGE_BAGS.size();
-
-std::random_device rd;
-std::mt19937 rgen(rd());
-
 class SolutionFactory {
 private:
-    auto generate_random_bag_index() {
-        std::uniform_int_distribution<int> distr(0, garbage_bag_count - 1);
-        return distr(rgen);
-    }
-
-    auto swap_random_adjacent_bag_pair(Solution solution) {
-        auto random_index = this->generate_random_bag_index();
-        auto next_index = (random_index + 1) % garbage_bag_count;
-
-        solution.swap_garbage_bags(random_index, next_index);
-
-        return solution;
-    }
-
     auto get_best_neighbor(Solution solution) {
         auto neighbors = solution.generate_neighbors();
 
@@ -66,7 +46,7 @@ public:
         auto best_solution = Solution{BIN_WEIGHT_LIMIT, GARBAGE_BAGS};
 
         while (true) {
-            auto new_solution = swap_random_adjacent_bag_pair(best_solution);
+            auto new_solution = best_solution.generate_random_neighbor();
 
             if (new_solution.get_filled_bin_count() <= best_solution.get_filled_bin_count()) {
                 best_solution = std::move(new_solution);

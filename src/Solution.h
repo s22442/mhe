@@ -1,6 +1,7 @@
 #include "GarbageBag.h"
 #include "utils.h"
 #include <iostream>
+#include <random>
 #include <vector>
 
 #ifndef SOLUTION_H
@@ -8,10 +9,18 @@
 
 using GarbageBags = std::vector<GarbageBag>;
 
+std::random_device rd;
+std::mt19937 rgen(rd());
+
 class Solution {
 private:
     const int bin_weight_limit;
     GarbageBags garbage_bags;
+
+    auto generate_random_bag_index() {
+        std::uniform_int_distribution<int> distr(0, this->garbage_bags.size() - 1);
+        return distr(rgen);
+    }
 
 public:
     Solution(
@@ -40,6 +49,17 @@ public:
         }
 
         return neighbors;
+    }
+
+    auto generate_random_neighbor() {
+        auto neighbor = *this;
+
+        auto random_index = this->generate_random_bag_index();
+        auto next_index = (random_index + 1) % this->garbage_bags.size();
+
+        neighbor.swap_garbage_bags(random_index, next_index);
+
+        return neighbor;
     }
 
     auto get_filled_bin_count() -> int {
