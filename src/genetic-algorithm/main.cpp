@@ -65,10 +65,23 @@ private:
     }
 
     auto select_parents(std::vector<Solution> population) {
-        std::vector<int> fitnesses;
+        auto fitnesses = std::vector<int>{};
 
-        for (int i = 0; i < population.size(); i++) {
+        for (auto i : range(population.size())) {
             fitnesses.push_back(this->calculate_fitness(population[i]));
+        }
+
+        auto parents = std::vector<Solution>{};
+        auto dist = std::uniform_int_distribution<int>{0, (int)population.size() - 1};
+
+        for (auto i : range(population.size())) {
+            auto index_a = dist(_factory_rgen);
+            auto index_b = dist(_factory_rgen);
+
+            parents.push_back(
+                fitnesses[index_a] >= fitnesses[index_b]
+                    ? population[index_a]
+                    : population[index_b]);
         }
 
         return population;
@@ -88,11 +101,9 @@ public:
             auto offspring = crossover_cb(parents);
 
             auto mutated_offstpring = std::vector<Solution>{};
-            std::transform(
-                offspring.begin(),
-                offspring.end(),
-                mutated_offstpring.begin(),
-                [&](auto solution) { return mutation_cb(solution); });
+            for (auto solution : offspring) {
+                mutated_offstpring.push_back(mutation_cb(solution));
+            }
 
             population = offspring;
         }
@@ -112,16 +123,17 @@ const auto TMP_CROSSOVER_CB = CrossoverCb{
         return parents;
     }};
 
-// todo @kw
-const auto TMP_MUTATION_CB = MutationCb{
+const auto RANDOM_NEIGHBOR_MUTATION_CB = MutationCb{
     [](auto solution) {
-        return solution;
+        return solution.generate_random_neighbor();
     }};
 
-// todo @kw
-const auto TMP_ENDING_CONDITION_CB = EndingConditionCb{
+const auto GENERATION_COUNT_LIMIT = 1000;
+
+const auto GENERATION_COUNT_LIMIT_ENDING_CONDITION_CB = EndingConditionCb{
     [](auto population) {
-        return true;
+        static int generation_count;
+        return generation_count++ >= GENERATION_COUNT_LIMIT;
     }};
 
 auto CROSSOVER_CB_MAP = std::map<int, CrossoverCb>{
@@ -129,11 +141,11 @@ auto CROSSOVER_CB_MAP = std::map<int, CrossoverCb>{
 };
 
 auto MUTATION_CB_MAP = std::map<int, MutationCb>{
-    {1, TMP_MUTATION_CB},
+    {1, RANDOM_NEIGHBOR_MUTATION_CB},
 };
 
 auto ENDING_CONDITION_CB_MAP = std::map<int, EndingConditionCb>{
-    {1, TMP_ENDING_CONDITION_CB},
+    {1, GENERATION_COUNT_LIMIT_ENDING_CONDITION_CB},
 };
 
 int main(int argc, char *argv[]) {
