@@ -138,9 +138,9 @@ auto generate_bag_count_per_weight_map(GarbageBags bags) -> GarbageBagCountPerWe
 auto BAG_COUNT_PER_WEIGHT_MAP = generate_bag_count_per_weight_map(GARBAGE_BAGS);
 
 auto insert_available_bag_to_vec(
-    GarbageBag bag,
     GarbageBags &bags,
     GarbageBagCountPerWeightMap &bag_count_per_weight,
+    GarbageBag bag,
     int target_index = -1) -> void {
 
     auto weight = bag.get_weight();
@@ -182,27 +182,29 @@ auto generate_striped_offspring(Solution parent_a, Solution parent_b) -> std::pa
     auto child_bag_count_per_weight_a = GarbageBagCountPerWeightMap{};
     auto child_bag_count_per_weight_b = GarbageBagCountPerWeightMap{};
 
+    auto insert_to_child_bags_a = [&](GarbageBag bag, int target_index = -1) {
+        insert_available_bag_to_vec(
+            child_bags_a,
+            child_bag_count_per_weight_a,
+            std::move(bag),
+            target_index);
+    };
+
+    auto insert_to_child_bags_b = [&](GarbageBag bag, int target_index = -1) {
+        insert_available_bag_to_vec(
+            child_bags_b,
+            child_bag_count_per_weight_b,
+            std::move(bag),
+            target_index);
+    };
+
     for (auto i : range(parent_bags_a.size())) {
         if (i % 2) {
-            insert_available_bag_to_vec(
-                parent_bags_a[i],
-                child_bags_a,
-                child_bag_count_per_weight_a);
-
-            insert_available_bag_to_vec(
-                parent_bags_b[i],
-                child_bags_b,
-                child_bag_count_per_weight_b);
+            insert_to_child_bags_a(parent_bags_a[i]);
+            insert_to_child_bags_b(parent_bags_b[i]);
         } else {
-            insert_available_bag_to_vec(
-                parent_bags_b[i],
-                child_bags_a,
-                child_bag_count_per_weight_a);
-
-            insert_available_bag_to_vec(
-                parent_bags_a[i],
-                child_bags_b,
-                child_bag_count_per_weight_b);
+            insert_to_child_bags_a(parent_bags_b[i]);
+            insert_to_child_bags_b(parent_bags_a[i]);
         }
     }
 
@@ -210,20 +212,16 @@ auto generate_striped_offspring(Solution parent_a, Solution parent_b) -> std::pa
         while (
             !child_bag_count_per_weight_a.contains(weight) ||
             child_bag_count_per_weight_a[weight] != count) {
-            insert_available_bag_to_vec(
+            insert_to_child_bags_a(
                 GarbageBag{weight},
-                child_bags_a,
-                child_bag_count_per_weight_a,
                 find_bag_index_by_weight(parent_bags_a, weight));
         }
 
         while (
             !child_bag_count_per_weight_b.contains(weight) ||
             child_bag_count_per_weight_b[weight] != count) {
-            insert_available_bag_to_vec(
+            insert_to_child_bags_b(
                 GarbageBag{weight},
-                child_bags_b,
-                child_bag_count_per_weight_b,
                 find_bag_index_by_weight(parent_bags_b, weight));
         }
     }
