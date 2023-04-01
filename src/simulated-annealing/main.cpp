@@ -9,7 +9,7 @@
 const auto BIN_WEIGHT_LIMIT = 100;
 
 // best possible bin count: 8
-const auto GARBAGE_BAGS = std::vector<GarbageBag>{
+const auto GARBAGE_BAGS = GarbageBags{
     GarbageBag(48),
     GarbageBag(30),
     GarbageBag(36),

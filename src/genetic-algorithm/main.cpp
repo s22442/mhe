@@ -10,7 +10,7 @@
 const auto BIN_WEIGHT_LIMIT = 100;
 
 // best possible bin count: 8
-const auto GARBAGE_BAGS = std::vector<GarbageBag>{
+const auto GARBAGE_BAGS = GarbageBags{
     GarbageBag(48),
     GarbageBag(30),
     GarbageBag(36),
@@ -101,7 +101,7 @@ public:
             auto offspring = crossover_cb(parents);
 
             auto mutated_offstpring = std::vector<Solution>{};
-            for (auto solution : offspring) {
+            for (auto &solution : offspring) {
                 mutated_offstpring.push_back(mutation_cb(solution));
             }
 
@@ -117,10 +117,149 @@ public:
     }
 };
 
-// todo @kw
-const auto TMP_CROSSOVER_CB = CrossoverCb{
+using GarbageBagCountPerWeightMap = std::map<int, int>;
+
+auto generate_bag_count_per_weight_map(GarbageBags bags) -> GarbageBagCountPerWeightMap {
+    auto bag_count_per_weight_map = GarbageBagCountPerWeightMap{};
+
+    for (auto &bag : bags) {
+        auto weight = bag.get_weight();
+
+        if (bag_count_per_weight_map.contains(weight)) {
+            bag_count_per_weight_map[weight] += 1;
+        } else {
+            bag_count_per_weight_map[weight] = 1;
+        }
+    }
+
+    return bag_count_per_weight_map;
+}
+
+auto BAG_COUNT_PER_WEIGHT_MAP = generate_bag_count_per_weight_map(GARBAGE_BAGS);
+
+auto insert_available_bag_to_vec(
+    GarbageBag bag,
+    GarbageBags &bags,
+    GarbageBagCountPerWeightMap &bag_count_per_weight,
+    int target_index = -1) -> void {
+
+    auto weight = bag.get_weight();
+
+    if (
+        bag_count_per_weight.contains(weight) &&
+        bag_count_per_weight[weight] == BAG_COUNT_PER_WEIGHT_MAP[weight]) {
+        return;
+    }
+
+    if (bag_count_per_weight.contains(weight)) {
+        bag_count_per_weight[weight] += 1;
+    } else {
+        bag_count_per_weight[weight] = 1;
+    }
+
+    if (target_index == -1 || target_index >= bags.size()) {
+        bags.push_back(std::move(bag));
+    } else {
+        bags.insert(bags.begin() + target_index, std::move(bag));
+    }
+}
+
+auto find_bag_index_by_weight(GarbageBags &bags, int target_weight) {
+    for (auto i : range(bags.size())) {
+        if (bags[i].get_weight() == target_weight) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+auto generate_striped_offspring(Solution parent_a, Solution parent_b) -> std::pair<Solution, Solution> {
+    auto parent_bags_a = parent_a.get_garbage_bags();
+    auto parent_bags_b = parent_b.get_garbage_bags();
+    auto child_bags_a = GarbageBags{};
+    auto child_bags_b = GarbageBags{};
+    auto child_bag_count_per_weight_a = GarbageBagCountPerWeightMap{};
+    auto child_bag_count_per_weight_b = GarbageBagCountPerWeightMap{};
+
+    for (auto i : range(parent_bags_a.size())) {
+        if (i % 2) {
+            insert_available_bag_to_vec(
+                parent_bags_a[i],
+                child_bags_a,
+                child_bag_count_per_weight_a);
+
+            insert_available_bag_to_vec(
+                parent_bags_b[i],
+                child_bags_b,
+                child_bag_count_per_weight_b);
+        } else {
+            insert_available_bag_to_vec(
+                parent_bags_b[i],
+                child_bags_a,
+                child_bag_count_per_weight_a);
+
+            insert_available_bag_to_vec(
+                parent_bags_a[i],
+                child_bags_b,
+                child_bag_count_per_weight_b);
+        }
+    }
+
+    for (auto [weight, count] : BAG_COUNT_PER_WEIGHT_MAP) {
+        while (
+            !child_bag_count_per_weight_a.contains(weight) ||
+            child_bag_count_per_weight_a[weight] != count) {
+            insert_available_bag_to_vec(
+                GarbageBag{weight},
+                child_bags_a,
+                child_bag_count_per_weight_a,
+                find_bag_index_by_weight(parent_bags_a, weight));
+        }
+
+        while (
+            !child_bag_count_per_weight_b.contains(weight) ||
+            child_bag_count_per_weight_b[weight] != count) {
+            insert_available_bag_to_vec(
+                GarbageBag{weight},
+                child_bags_b,
+                child_bag_count_per_weight_b,
+                find_bag_index_by_weight(parent_bags_b, weight));
+        }
+    }
+
+    auto child_a = Solution{BIN_WEIGHT_LIMIT, child_bags_a};
+    auto child_b = Solution{BIN_WEIGHT_LIMIT, child_bags_b};
+
+    return {std::move(child_a), std::move(child_b)};
+}
+
+const auto STRIPED_CROSSOVER_CB = CrossoverCb{
     [](auto parents) {
-        return parents;
+        auto offspring = std::vector<Solution>{};
+
+        for (auto i : range(parents.size())) {
+            if (i % 2) {
+                auto [child_a, child_b] = generate_striped_offspring(
+                    parents[i],
+                    parents[i - 1]);
+
+                offspring.push_back(child_a);
+                offspring.push_back(child_b);
+
+                continue;
+            }
+
+            if (i == parents.size() - 1) {
+                auto [child_a, child_b] = generate_striped_offspring(
+                    parents[i],
+                    parents[i - 1]);
+
+                offspring.push_back(child_a);
+            }
+        }
+
+        return offspring;
     }};
 
 const auto RANDOM_NEIGHBOR_MUTATION_CB = MutationCb{
@@ -128,7 +267,7 @@ const auto RANDOM_NEIGHBOR_MUTATION_CB = MutationCb{
         return solution.generate_random_neighbor();
     }};
 
-const auto GENERATION_COUNT_LIMIT = 1000;
+const auto GENERATION_COUNT_LIMIT = 10;
 
 const auto GENERATION_COUNT_LIMIT_ENDING_CONDITION_CB = EndingConditionCb{
     [](auto population) {
@@ -137,7 +276,7 @@ const auto GENERATION_COUNT_LIMIT_ENDING_CONDITION_CB = EndingConditionCb{
     }};
 
 auto CROSSOVER_CB_MAP = std::map<int, CrossoverCb>{
-    {1, TMP_CROSSOVER_CB},
+    {1, STRIPED_CROSSOVER_CB},
 };
 
 auto MUTATION_CB_MAP = std::map<int, MutationCb>{
@@ -151,7 +290,7 @@ auto ENDING_CONDITION_CB_MAP = std::map<int, EndingConditionCb>{
 int main(int argc, char *argv[]) {
     auto solution_factory = SolutionFactory{};
 
-    auto population_size = 10;
+    auto population_size = 100;
     auto crossover_cb_key = 1;
     auto mutation_cb_key = 1;
     auto ending_condition_cb_key = 1;
