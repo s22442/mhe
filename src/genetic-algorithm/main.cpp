@@ -47,7 +47,7 @@ private:
     auto generate_random_solution() {
         auto bags = GARBAGE_BAGS;
         std::shuffle(bags.begin(), bags.end(), _factory_rgen);
-        return Solution{BIN_WEIGHT_LIMIT, bags};
+        return Solution{BIN_WEIGHT_LIMIT, std::move(bags)};
     }
 
     auto generate_population(int population_size) {
@@ -60,11 +60,11 @@ private:
         return population;
     }
 
-    auto calculate_fitness(Solution solution) {
+    auto calculate_fitness(Solution &solution) {
         return 1.0 / (1 + solution.get_filled_bin_count());
     }
 
-    auto select_parents(std::vector<Solution> population) {
+    auto select_parents(std::vector<Solution> &population) {
         auto fitnesses = std::vector<int>{};
 
         for (auto i : range(population.size())) {
@@ -84,15 +84,15 @@ private:
                     : population[index_b]);
         }
 
-        return population;
+        return parents;
     }
 
 public:
     auto generate_genetic_solution(
         int population_size,
-        CrossoverCb crossover_cb,
-        MutationCb mutation_cb,
-        EndingConditionCb ending_condition_cb) {
+        CrossoverCb &crossover_cb,
+        MutationCb &mutation_cb,
+        EndingConditionCb &ending_condition_cb) {
 
         auto population = this->generate_population(population_size);
 
@@ -105,14 +105,14 @@ public:
                 mutated_offstpring.push_back(mutation_cb(solution));
             }
 
-            population = offspring;
+            population = std::move(mutated_offstpring);
         }
 
         return *std::max_element(
             population.begin(),
             population.end(),
             [&](auto a, auto b) {
-                return this->calculate_fitness(a) > this->calculate_fitness(b);
+                return this->calculate_fitness(a) < this->calculate_fitness(b);
             });
     }
 };
@@ -172,6 +172,7 @@ int main(int argc, char *argv[]) {
                 << "   - 2 -> //todo @kw"
                 << std::endl
                 << "   Default: " << crossover_cb_key
+                << std::endl
                 << "3. Mutation method."
                 << std::endl
                 << "   - 1 -> //todo @kw"
