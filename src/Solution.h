@@ -65,22 +65,28 @@ public:
         return neighbor;
     }
 
-    auto get_filled_bin_count() -> int {
-        auto binCount = 1;
-        auto weightInLastBin = 0;
+    auto get_bins() -> std::vector<GarbageBags> {
+        auto bins = std::vector<GarbageBags>{{}};
 
-        for (auto &bag : this->garbage_bags) {
+        auto weight_in_last_bin = 0;
+
+        for (auto bag : this->garbage_bags) {
             auto bag_weight = bag.get_weight();
 
-            if ((weightInLastBin + bag_weight) > this->bin_weight_limit) {
-                binCount++;
-                weightInLastBin = bag_weight;
+            if ((weight_in_last_bin + bag_weight) > this->bin_weight_limit) {
+                bins.push_back({std::move(bag)});
+                weight_in_last_bin = bag_weight;
             } else {
-                weightInLastBin += bag_weight;
+                bins.back().push_back(std::move(bag));
+                weight_in_last_bin += bag_weight;
             }
         }
 
-        return binCount;
+        return bins;
+    }
+
+    auto get_filled_bin_count() -> int {
+        return this->get_bins().size();
     }
 
     auto to_string() -> std::string {
@@ -89,15 +95,24 @@ public:
         str += std::to_string(this->get_filled_bin_count());
         str += "; garbage bags: ";
 
-        auto first_bag = true;
-        for (auto &bag : this->garbage_bags) {
-            if (!first_bag) {
-                str += ", ";
+        auto first_bin = true;
+        for (auto &bin : this->get_bins()) {
+            if (!first_bin) {
+                str += " | ";
             } else {
-                first_bag = false;
+                first_bin = false;
             }
 
-            str += std::to_string(bag.get_weight());
+            auto first_bag = true;
+            for (auto &bag : bin) {
+                if (!first_bag) {
+                    str += ", ";
+                } else {
+                    first_bag = false;
+                }
+
+                str += std::to_string(bag.get_weight());
+            }
         }
 
         str += ")";
