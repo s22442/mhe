@@ -35,9 +35,11 @@ const auto GARBAGE_BAGS = GarbageBags{
     GarbageBag(30),
 };
 
-using CrossoverCb = std::function<std::vector<Solution>(std::vector<Solution>)>;
+using Population = std::vector<Solution>;
+using SolutionPair = std::pair<Solution, Solution>;
+using CrossoverCb = std::function<SolutionPair(Solution, Solution)>;
 using MutationCb = std::function<Solution(Solution)>;
-using EndingConditionCb = std::function<bool(std::vector<Solution>)>;
+using EndingConditionCb = std::function<bool(Population, int)>;
 
 auto _factory_rd = std::random_device{};
 auto _factory_rgen = std::mt19937{_factory_rd()};
@@ -51,7 +53,7 @@ private:
     }
 
     auto generate_population(int population_size) {
-        auto population = std::vector<Solution>{};
+        auto population = Population{};
 
         for (auto _ : range(population_size)) {
             population.push_back(this->generate_random_solution());
@@ -64,14 +66,14 @@ private:
         return 1.0 / (1 + solution.get_filled_bin_count());
     }
 
-    auto select_parents(std::vector<Solution> &population) {
+    auto select_parents(Population &population) {
         auto fitnesses = std::vector<int>{};
 
         for (auto i : range(population.size())) {
             fitnesses.push_back(this->calculate_fitness(population[i]));
         }
 
-        auto parents = std::vector<Solution>{};
+        auto parents = Population{};
         auto dist = std::uniform_int_distribution<int>{0, (int)population.size() - 1};
 
         for (auto i : range(population.size())) {
@@ -87,6 +89,33 @@ private:
         return parents;
     }
 
+    auto generate_offspring(Population &parents, CrossoverCb &crossover_cb) {
+        auto offspring = Population{};
+
+        for (auto i : range(parents.size())) {
+            if (i % 2) {
+                auto [child_a, child_b] = crossover_cb(
+                    parents[i],
+                    parents[i - 1]);
+
+                offspring.push_back(child_a);
+                offspring.push_back(child_b);
+
+                continue;
+            }
+
+            if (i == parents.size() - 1) {
+                auto [child_a, child_b] = crossover_cb(
+                    parents[i],
+                    parents[i - 1]);
+
+                offspring.push_back(child_a);
+            }
+        }
+
+        return offspring;
+    }
+
 public:
     auto generate_genetic_solution(
         int population_size,
@@ -95,12 +124,13 @@ public:
         EndingConditionCb &ending_condition_cb) {
 
         auto population = this->generate_population(population_size);
+        auto generation_count = 0;
 
-        while (!ending_condition_cb(population)) {
+        while (!ending_condition_cb(population, generation_count++)) {
             auto parents = this->select_parents(population);
-            auto offspring = crossover_cb(parents);
+            auto offspring = this->generate_offspring(parents, crossover_cb);
 
-            auto mutated_offstpring = std::vector<Solution>{};
+            auto mutated_offstpring = Population{};
             for (auto &solution : offspring) {
                 mutated_offstpring.push_back(mutation_cb(solution));
             }
@@ -174,7 +204,10 @@ auto find_bag_index_by_weight(GarbageBags &bags, int target_weight) {
     return -1;
 }
 
-auto generate_striped_offspring(Solution parent_a, Solution parent_b) -> std::pair<Solution, Solution> {
+auto cross_parents_into_striped_children(
+    Solution parent_a,
+    Solution parent_b)
+    -> SolutionPair {
     auto parent_bags_a = parent_a.get_garbage_bags();
     auto parent_bags_b = parent_b.get_garbage_bags();
     auto child_bags_a = GarbageBags{};
@@ -232,57 +265,26 @@ auto generate_striped_offspring(Solution parent_a, Solution parent_b) -> std::pa
     return {std::move(child_a), std::move(child_b)};
 }
 
-const auto STRIPED_CROSSOVER_CB = CrossoverCb{
-    [](auto parents) {
-        auto offspring = std::vector<Solution>{};
-
-        for (auto i : range(parents.size())) {
-            if (i % 2) {
-                auto [child_a, child_b] = generate_striped_offspring(
-                    parents[i],
-                    parents[i - 1]);
-
-                offspring.push_back(child_a);
-                offspring.push_back(child_b);
-
-                continue;
-            }
-
-            if (i == parents.size() - 1) {
-                auto [child_a, child_b] = generate_striped_offspring(
-                    parents[i],
-                    parents[i - 1]);
-
-                offspring.push_back(child_a);
-            }
-        }
-
-        return offspring;
-    }};
-
-const auto RANDOM_NEIGHBOR_MUTATION_CB = MutationCb{
-    [](auto solution) {
-        return solution.generate_random_neighbor();
-    }};
+auto swap_random_adjacent_bags(Solution solution) {
+    return solution.generate_random_neighbor();
+}
 
 const auto GENERATION_COUNT_LIMIT = 10;
 
-const auto GENERATION_COUNT_LIMIT_ENDING_CONDITION_CB = EndingConditionCb{
-    [](auto population) {
-        static int generation_count;
-        return generation_count++ >= GENERATION_COUNT_LIMIT;
-    }};
+auto end_on_generation_count_limit(Population _, int generation_count) {
+    return generation_count++ >= GENERATION_COUNT_LIMIT;
+}
 
 auto CROSSOVER_CB_MAP = std::map<int, CrossoverCb>{
-    {1, STRIPED_CROSSOVER_CB},
+    {1, cross_parents_into_striped_children},
 };
 
 auto MUTATION_CB_MAP = std::map<int, MutationCb>{
-    {1, RANDOM_NEIGHBOR_MUTATION_CB},
+    {1, swap_random_adjacent_bags},
 };
 
 auto ENDING_CONDITION_CB_MAP = std::map<int, EndingConditionCb>{
-    {1, GENERATION_COUNT_LIMIT_ENDING_CONDITION_CB},
+    {1, end_on_generation_count_limit},
 };
 
 int main(int argc, char *argv[]) {
