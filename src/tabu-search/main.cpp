@@ -79,23 +79,21 @@ public:
 int main(int argc, char *argv[]) {
     auto solution_factory = SolutionFactory{};
 
-    auto tabu_size = -1;
+    auto args = collect_args({
+                                 {
+                                     "Size of tabu",
+                                     "Tabu not greater than 0 means infinite tabu",
+                                     {},
+                                     -1,
+                                 },
+                             },
+                             argc, argv);
 
-    if (argc >= 2) {
-        if (std::string{argv[1]} == "help") {
-            std::cout
-                << "Args:"
-                << std::endl
-                << "1. Size of tabu. Tabu not greater than 0 means infinite tabu."
-                << std::endl
-                << "   Default: " << tabu_size
-                << std::endl;
-
-            return 0;
-        } else {
-            tabu_size = std::stoi(argv[1]);
-        }
+    if (!args.size()) {
+        return 0;
     }
+
+    auto tabu_size = args[0];
 
     if (is_tabu_infinite(tabu_size)) {
         std::cout

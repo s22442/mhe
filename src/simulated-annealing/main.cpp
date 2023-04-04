@@ -73,49 +73,34 @@ auto TEMPERATURE_CB_MAP = std::map<int, std::function<double(int)>>{
 int main(int argc, char *argv[]) {
     auto solution_factory = SolutionFactory{};
 
-    auto iteration_count = 1000;
-    auto temperature_cb_key = 1;
+    auto args = collect_args({
+                                 {
+                                     "Iteration count",
+                                     "",
+                                     {},
+                                     1000,
+                                 },
+                                 {
+                                     "Algorithm",
+                                     "- 1 -> T ~== 1 / k"
+                                     "\n   - 2 -> T ~== 1 / log(k)"
+                                     "\n   - 3 -> T ~== 1 / a^k",
+                                     {map_keys_to_set(TEMPERATURE_CB_MAP)},
+                                     1,
+                                 },
+                             },
+                             argc, argv);
 
-    if (argc >= 2) {
-        if (std::string{argv[1]} == "help") {
-            std::cout
-                << "Args:"
-                << std::endl
-                << "1. Iteration count."
-                << std::endl
-                << "   Default: " << iteration_count
-                << std::endl
-                << "2. Algorithm."
-                << std::endl
-                << "   - 1 -> T ~== 1 / k"
-                << std::endl
-                << "   - 2 -> T ~== 1 / log(k)"
-                << std::endl
-                << "   - 3 -> T ~== 1 / a^k"
-                << std::endl
-                << "   Default: " << temperature_cb_key
-                << std::endl;
-
-            return 0;
-        } else {
-            iteration_count = std::stoi(argv[1]);
-
-            if (argc >= 3) {
-                auto new_temperature_cb_key = std::stoi(argv[2]);
-
-                if (TEMPERATURE_CB_MAP.contains(new_temperature_cb_key)) {
-                    temperature_cb_key = new_temperature_cb_key;
-                }
-            }
-        }
+    if (!args.size()) {
+        return 0;
     }
 
     std::cout
         << "Simulated annealing solution:"
         << std::endl
         << solution_factory.generate_simulated_annealing_solution(
-               iteration_count,
-               TEMPERATURE_CB_MAP[temperature_cb_key])
+               args[0],
+               TEMPERATURE_CB_MAP[args[1]])
         << std::endl;
 
     return 0;

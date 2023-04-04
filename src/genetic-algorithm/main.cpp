@@ -4,7 +4,6 @@
 #include <list>
 #include <map>
 #include <random>
-#include <set>
 #include <vector>
 
 const auto BIN_WEIGHT_LIMIT = 100;
@@ -387,83 +386,50 @@ auto ENDING_CONDITION_CB_MAP = std::map<int, EndingConditionCb>{
 int main(int argc, char *argv[]) {
     auto solution_factory = SolutionFactory{};
 
-    auto population_size = 100;
-    auto crossover_cb_key = 1;
-    auto mutation_cb_key = 1;
-    auto ending_condition_cb_key = 1;
+    auto args = collect_args({
+                                 {
+                                     "Population size",
+                                     "",
+                                     {},
+                                     100,
+                                 },
+                                 {
+                                     "Crossover method",
+                                     "- 1 -> Bag striping"
+                                     "\n   - 2 -> Bin striping",
+                                     {map_keys_to_set(CROSSOVER_CB_MAP)},
+                                     1,
+                                 },
+                                 {
+                                     "Mutation method",
+                                     "- 1 -> Swap random adjacent bag pair"
+                                     "\n   - 2 -> Shuffle bins",
+                                     {map_keys_to_set(MUTATION_CB_MAP)},
+                                     1,
+                                 },
+                                 {
+                                     "Ending condition",
+                                     "- 1 -> Generation count limit"
+                                     " (" +
+                                         std::to_string(GENERATION_COUNT_LIMIT) + ")"
+                                                                                  "\n   - 2 -> // todo @kw",
+                                     {map_keys_to_set(ENDING_CONDITION_CB_MAP)},
+                                     1,
+                                 },
+                             },
+                             argc, argv);
 
-    if (argc >= 2) {
-        if (std::string{argv[1]} == "help") {
-            std::cout
-                << "Args:"
-                << std::endl
-                << "1. Population size."
-                << std::endl
-                << "   Default: " << population_size
-                << std::endl
-                << "2. Crossover method."
-                << std::endl
-                << "   - 1 -> //todo @kw"
-                << std::endl
-                << "   - 2 -> //todo @kw"
-                << std::endl
-                << "   Default: " << crossover_cb_key
-                << std::endl
-                << "3. Mutation method."
-                << std::endl
-                << "   - 1 -> //todo @kw"
-                << std::endl
-                << "   - 2 -> //todo @kw"
-                << std::endl
-                << "   Default: " << mutation_cb_key
-                << std::endl
-                << "4. Ending condition method."
-                << std::endl
-                << "   - 1 -> //todo @kw"
-                << std::endl
-                << "   - 2 -> //todo @kw"
-                << std::endl
-                << "   Default: " << ending_condition_cb_key
-                << std::endl;
-
-            return 0;
-        } else {
-            population_size = std::stoi(argv[1]);
-
-            if (argc >= 3) {
-                auto new_crossover_cb_key = std::stoi(argv[2]);
-
-                if (CROSSOVER_CB_MAP.contains(new_crossover_cb_key)) {
-                    crossover_cb_key = new_crossover_cb_key;
-                }
-
-                if (argc >= 4) {
-                    auto new_mutation_cb_key = std::stoi(argv[3]);
-
-                    if (MUTATION_CB_MAP.contains(new_mutation_cb_key)) {
-                        mutation_cb_key = new_mutation_cb_key;
-                    }
-
-                    if (argc >= 5) {
-                        auto new_ending_condition_cb_key = std::stoi(argv[4]);
-
-                        if (ENDING_CONDITION_CB_MAP.contains(new_ending_condition_cb_key)) {
-                            ending_condition_cb_key = new_ending_condition_cb_key;
-                        }
-                    }
-                }
-            }
-        }
+    if (!args.size()) {
+        return 0;
     }
 
     std::cout
-        << "Genetic solution:"
-        << std::endl
+        << "Genetic solution:" << std::endl
         << solution_factory.generate_genetic_solution(
-               population_size,
-               CROSSOVER_CB_MAP[crossover_cb_key],
-               MUTATION_CB_MAP[mutation_cb_key],
-               ENDING_CONDITION_CB_MAP[ending_condition_cb_key])
+               args[0],
+               CROSSOVER_CB_MAP[args[1]],
+               MUTATION_CB_MAP[args[2]],
+               ENDING_CONDITION_CB_MAP[args[3]])
         << std::endl;
 
     return 0;
