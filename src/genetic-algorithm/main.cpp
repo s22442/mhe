@@ -40,18 +40,22 @@ using CrossoverCb = std::function<SolutionPair(Solution, Solution)>;
 using MutationCb = std::function<Solution(Solution)>;
 using EndingConditionCb = std::function<bool(Population, int)>;
 
+auto calculate_fitness(Solution &solution) -> double {
+    return 1.0 / (1 + solution.get_filled_bin_count());
+}
+
 auto _ga_rd = std::random_device{};
 auto _ga_rgen = std::mt19937{_ga_rd()};
 
 class SolutionFactory {
 private:
-    auto generate_random_solution() {
+    auto generate_random_solution() -> Solution {
         auto bags = GARBAGE_BAGS;
         std::shuffle(bags.begin(), bags.end(), _ga_rgen);
         return Solution{BIN_WEIGHT_LIMIT, std::move(bags)};
     }
 
-    auto generate_population(int population_size) {
+    auto generate_population(int population_size) -> Population {
         auto population = Population{};
 
         for (auto _ : range(population_size)) {
@@ -61,15 +65,11 @@ private:
         return population;
     }
 
-    auto calculate_fitness(Solution &solution) {
-        return 1.0 / (1 + solution.get_filled_bin_count());
-    }
-
-    auto select_parents(Population &population) {
+    auto select_parents(Population &population) -> Population {
         auto fitnesses = std::vector<int>{};
 
         for (auto i : range(population.size())) {
-            fitnesses.push_back(this->calculate_fitness(population[i]));
+            fitnesses.push_back(calculate_fitness(population[i]));
         }
 
         auto parents = Population{};
@@ -88,7 +88,7 @@ private:
         return parents;
     }
 
-    auto generate_offspring(Population &parents, CrossoverCb &crossover_cb) {
+    auto generate_offspring(Population &parents, CrossoverCb &crossover_cb) -> Population {
         auto offspring = Population{};
 
         for (auto i : range(parents.size())) {
@@ -120,7 +120,8 @@ public:
         int population_size,
         CrossoverCb &crossover_cb,
         MutationCb &mutation_cb,
-        EndingConditionCb &ending_condition_cb) {
+        EndingConditionCb &ending_condition_cb)
+        -> Solution {
 
         auto population = this->generate_population(population_size);
         auto generation_count = 0;
@@ -141,7 +142,7 @@ public:
             population.begin(),
             population.end(),
             [&](auto a, auto b) {
-                return this->calculate_fitness(a) < this->calculate_fitness(b);
+                return calculate_fitness(a) < calculate_fitness(b);
             });
     }
 };
@@ -170,7 +171,8 @@ auto insert_available_bag_to_vec(
     GarbageBags &bags,
     GarbageBagCountPerWeightMap &bag_count_per_weight,
     GarbageBag bag,
-    int target_index) -> void {
+    int target_index)
+    -> void {
 
     auto weight = bag.get_weight();
 
@@ -193,7 +195,7 @@ auto insert_available_bag_to_vec(
     }
 }
 
-auto find_bag_index_by_weight(GarbageBags &bags, int target_weight) {
+auto find_bag_index_by_weight(GarbageBags &bags, int target_weight) -> int {
     for (auto i : range(bags.size())) {
         if (bags[i].get_weight() == target_weight) {
             return i;
@@ -365,8 +367,32 @@ auto shuffle_bins(Solution solution) -> Solution {
 
 const auto GENERATION_COUNT_LIMIT = 10;
 
-auto end_on_generation_count_limit(Population _, int generation_count) {
+auto end_on_generation_count_limit(Population _, int generation_count) -> bool {
     return generation_count++ >= GENERATION_COUNT_LIMIT;
+}
+
+const auto SAME_FITNESS_POPULATION_PERCENT_THRESHOLD = 70;
+
+auto end_on_undifferentiated_population(Population population, int _) -> bool {
+    auto solution_count_per_fitness = std::map<double, int>{};
+
+    auto solution_count_threshold = population.size() * SAME_FITNESS_POPULATION_PERCENT_THRESHOLD / 100;
+
+    for (auto &solution : population) {
+        auto fitness = calculate_fitness(solution);
+
+        if (solution_count_per_fitness.contains(fitness)) {
+            solution_count_per_fitness[fitness] += 1;
+        } else {
+            solution_count_per_fitness[fitness] = 1;
+        }
+
+        if (solution_count_per_fitness[fitness] >= solution_count_threshold) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 auto CROSSOVER_CB_MAP = std::map<int, CrossoverCb>{
@@ -381,6 +407,7 @@ auto MUTATION_CB_MAP = std::map<int, MutationCb>{
 
 auto ENDING_CONDITION_CB_MAP = std::map<int, EndingConditionCb>{
     {1, end_on_generation_count_limit},
+    {2, end_on_undifferentiated_population},
 };
 
 int main(int argc, char *argv[]) {
@@ -412,7 +439,9 @@ int main(int argc, char *argv[]) {
                                      "- 1 -> Generation count limit"
                                      " (" +
                                          std::to_string(GENERATION_COUNT_LIMIT) + ")"
-                                                                                  "\n   - 2 -> // todo @kw",
+                                                                                  "\n   - 2 -> Majority of the population has the same fitness"
+                                                                                  " (threshold: " +
+                                         std::to_string(SAME_FITNESS_POPULATION_PERCENT_THRESHOLD) + "%)",
                                      {map_keys_to_set(ENDING_CONDITION_CB_MAP)},
                                      1,
                                  },
