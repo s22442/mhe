@@ -2,52 +2,52 @@
 
 In this optimization problem, a set of items with different weights must be distributed over several bins. Each of the containers has the same fixed weight limit. The goal is to minimize the number of bins used.
 
-## Hill climbing algorithm
+- ## Hill climbing algorithm
 
-### Compile and run
+  #### Compile and run
 
-```bash
-./compile_and_run.sh hill-climbing
-```
+  ```bash
+  ./compile_and_run.sh hill-climbing
+  ```
 
-## Tabu search algorithm
+- ## Tabu search algorithm
 
-### Show available configuration
+  #### Show available configuration
 
-```bash
-./compile_and_run.sh tabu-search help
-```
+  ```bash
+  ./compile_and_run.sh tabu-search help
+  ```
 
-### Compile and run
+  #### Compile and run
 
-```bash
-./compile_and_run.sh tabu-search [args...]
-```
+  ```bash
+  ./compile_and_run.sh tabu-search [args...]
+  ```
 
-## Simulated annealing algorithm
+- ## Simulated annealing algorithm
 
-### Show available configuration
+  #### Show available configuration
 
-```bash
-./compile_and_run.sh simulated-annealing help
-```
+  ```bash
+  ./compile_and_run.sh simulated-annealing help
+  ```
 
-### Compile and run
+  #### Compile and run
 
-```bash
-./compile_and_run.sh simulated-annealing [args...]
-```
+  ```bash
+  ./compile_and_run.sh simulated-annealing [args...]
+  ```
 
-## Genetic algorithm
+- ## Genetic algorithm
 
-### Show available configuration
+  #### Show available configuration
 
-```bash
-./compile_and_run.sh genetic-algorithm help
-```
+  ```bash
+  ./compile_and_run.sh genetic-algorithm help
+  ```
 
-### Compile and run
+  #### Compile and run
 
-```bash
-./compile_and_run.sh genetic-algorithm [args...]
-```
+  ```bash
+  ./compile_and_run.sh genetic-algorithm [args...]
+  ```
