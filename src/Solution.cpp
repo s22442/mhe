@@ -1,5 +1,5 @@
-#include "GarbageBag.h"
-#include "utils.h"
+#include "GarbageBag.cpp"
+#include "utils.cpp"
 #include <iostream>
 #include <random>
 #include <vector>
