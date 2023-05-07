@@ -1,5 +1,5 @@
-#include "../Solution.cpp"
-#include "../utils.cpp"
+#include "../Solution.h"
+#include "../utils.h"
 #include <algorithm>
 #include <vector>
 

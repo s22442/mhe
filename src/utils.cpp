@@ -1,13 +1,11 @@
+#include "utils.h"
 #include <iostream>
 #include <map>
 #include <set>
 #include <vector>
 
-#ifndef UTILS_H
-#define UTILS_H
-
 // using std::ranges::iota_view requires GCC v10
-auto range(int len) {
+auto range(int len) -> std::vector<int> {
     auto v = std::vector<int>{};
 
     for (int i = 0; i < len; i++) {
@@ -16,13 +14,6 @@ auto range(int len) {
 
     return v;
 }
-
-struct ExpectedArg {
-    std::string name;
-    std::string description;
-    std::set<int> allowed_values;
-    int default_value;
-};
 
 auto print_help(const std::vector<ExpectedArg> &expected_args) -> void {
     std::cout << "Args:" << std::endl;
@@ -87,16 +78,3 @@ auto collect_args(
 
     return input_values;
 }
-
-template <typename T>
-auto map_keys_to_set(const std::map<int, T> &map) -> std::set<int> {
-    auto set = std::set<int>{};
-
-    for (auto &[key, _] : map) {
-        set.insert(key);
-    }
-
-    return set;
-};
-
-#endif // UTILS_H

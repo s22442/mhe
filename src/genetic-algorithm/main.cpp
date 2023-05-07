@@ -1,9 +1,10 @@
-#include "../Solution.cpp"
-#include "../utils.cpp"
+#include "../Solution.h"
+#include "../utils.h"
 #include <algorithm>
 #include <list>
 #include <map>
 #include <random>
+#include <set>
 #include <vector>
 
 const auto BIN_WEIGHT_LIMIT = 100;

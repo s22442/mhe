@@ -1,9 +1,7 @@
 #!/bin/bash
 
-rm -rf dist &&
+make dist/$1 &&
 
-mkdir "dist" &&
+echo -e "Running $1...\n" &&
 
-g++ -o "dist/main" "src/$1/main.cpp" -std=c++2a &&
-
-"./dist/main" $2 $3 $4 $5
+"./dist/$1" $2 $3 $4 $5

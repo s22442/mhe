@@ -1,5 +1,5 @@
-#include "../Solution.cpp"
-#include "../utils.cpp"
+#include "../Solution.h"
+#include "../utils.h"
 #include <algorithm>
 #include <list>
 #include <map>
@@ -34,8 +34,10 @@ const auto GARBAGE_BAGS = GarbageBags{
     GarbageBag(30),
 };
 
-class SolutionFactory {
+auto _sa_rd = std::random_device{};
+auto _sa_rgen = std::mt19937{_sa_rd()};
 
+class SolutionFactory {
 public:
     auto generate_simulated_annealing_solution(int iteration_count, std::function<double(int)> temperature_cb) {
         auto current_solution = Solution{BIN_WEIGHT_LIMIT, GARBAGE_BAGS};
@@ -51,10 +53,10 @@ public:
             } else {
                 std::uniform_real_distribution<double> distr(0.0, 1.0);
                 if (
-                    distr(_solution_rgen) < std::exp(
-                                                -std::abs(
-                                                    new_solution.get_filled_bin_count() - current_solution.get_filled_bin_count()) /
-                                                temperature_cb(i))) {
+                    distr(_sa_rgen) < std::exp(
+                                          -std::abs(
+                                              new_solution.get_filled_bin_count() - current_solution.get_filled_bin_count()) /
+                                          temperature_cb(i))) {
                     current_solution = new_solution;
                 }
             }
