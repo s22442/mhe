@@ -63,7 +63,8 @@ auto collect_args(
             auto input_value = std::stoi(argv[i + 1]);
 
             if (!expected_args[i].allowed_values.size() ||
-                expected_args[i].allowed_values.contains(input_value)) {
+                expected_args[i].allowed_values.find(input_value) !=
+                    expected_args[i].allowed_values.end()) {
                 input_values.push_back(input_value);
                 continue;
             }

@@ -42,7 +42,7 @@ public:
                 std::remove_if(
                     neighbors.begin(),
                     neighbors.end(),
-                    [&](Solution neighbor) { return tabu.contains(neighbor.get_garbage_bags()); }),
+                    [&](Solution neighbor) { return tabu.find(neighbor.get_garbage_bags()) != tabu.end(); }),
                 neighbors.end());
 
             if (neighbors.size() == 0) {

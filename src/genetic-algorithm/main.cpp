@@ -156,7 +156,7 @@ auto generate_bag_count_per_weight_map(GarbageBags bags) -> GarbageBagCountPerWe
     for (auto &bag : bags) {
         auto weight = bag.get_weight();
 
-        if (bag_count_per_weight_map.contains(weight)) {
+        if (bag_count_per_weight_map.count(weight)) {
             bag_count_per_weight_map[weight] += 1;
         } else {
             bag_count_per_weight_map[weight] = 1;
@@ -178,12 +178,12 @@ auto insert_available_bag_to_vec(
     auto weight = bag.get_weight();
 
     if (
-        bag_count_per_weight.contains(weight) &&
+        bag_count_per_weight.count(weight) &&
         bag_count_per_weight[weight] == BAG_COUNT_PER_WEIGHT_MAP[weight]) {
         return;
     }
 
-    if (bag_count_per_weight.contains(weight)) {
+    if (bag_count_per_weight.count(weight)) {
         bag_count_per_weight[weight] += 1;
     } else {
         bag_count_per_weight[weight] = 1;
@@ -243,7 +243,7 @@ public:
     auto complete_child_bags_based_on_parents() -> void {
         for (auto [weight, count] : BAG_COUNT_PER_WEIGHT_MAP) {
             while (
-                !this->child_bag_count_per_weight_a.contains(weight) ||
+                !this->child_bag_count_per_weight_a.count(weight) ||
                 this->child_bag_count_per_weight_a[weight] != count) {
                 this->insert_to_child_bags_a(
                     GarbageBag{weight},
@@ -253,7 +253,7 @@ public:
             }
 
             while (
-                !this->child_bag_count_per_weight_b.contains(weight) ||
+                !this->child_bag_count_per_weight_b.count(weight) ||
                 this->child_bag_count_per_weight_b[weight] != count) {
                 this->insert_to_child_bags_b(
                     GarbageBag{weight},
@@ -382,7 +382,7 @@ auto end_on_undifferentiated_population(Population population, int _) -> bool {
     for (auto &solution : population) {
         auto fitness = calculate_fitness(solution);
 
-        if (solution_count_per_fitness.contains(fitness)) {
+        if (solution_count_per_fitness.count(fitness)) {
             solution_count_per_fitness[fitness] += 1;
         } else {
             solution_count_per_fitness[fitness] = 1;

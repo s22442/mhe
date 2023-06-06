@@ -1,6 +1,6 @@
 DIST = if [ ! -d dist ]; then mkdir dist; fi
 CC = g++
-CFLAGS = -std=c++2a
+CFLAGS = -std=c++17
 
 all: dist/genetic-algorithm dist/hill-climbing simulated-annealing tabu-search
 
