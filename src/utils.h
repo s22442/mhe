@@ -1,3 +1,4 @@
+#include "GarbageBag.h"
 #include <iostream>
 #include <map>
 #include <set>
@@ -39,5 +40,7 @@ inline auto map_keys_to_set(const std::map<int, T> &map) -> std::set<int> {
 
     return set;
 };
+
+auto load_garbage_bags() -> std::vector<GarbageBag>;
 
 #endif // UTILS_H

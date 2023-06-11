@@ -1,38 +1,14 @@
 #include "../Solution.h"
 #include "../utils.h"
 #include <algorithm>
+#include <functional>
 #include <list>
 #include <map>
 #include <set>
 #include <vector>
 
 const auto BIN_WEIGHT_LIMIT = 100;
-
-// best possible bin count: 8
-const auto GARBAGE_BAGS = GarbageBags{
-    GarbageBag(48),
-    GarbageBag(30),
-    GarbageBag(36),
-    GarbageBag(19),
-    GarbageBag(36),
-    GarbageBag(27),
-    GarbageBag(42),
-    GarbageBag(42),
-    GarbageBag(36),
-    GarbageBag(24),
-    GarbageBag(30),
-    GarbageBag(48),
-    GarbageBag(30),
-    GarbageBag(36),
-    GarbageBag(19),
-    GarbageBag(36),
-    GarbageBag(27),
-    GarbageBag(42),
-    GarbageBag(42),
-    GarbageBag(36),
-    GarbageBag(24),
-    GarbageBag(30),
-};
+const auto GARBAGE_BAGS = load_garbage_bags();
 
 auto _sa_rd = std::random_device{};
 auto _sa_rgen = std::mt19937{_sa_rd()};

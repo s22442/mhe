@@ -1,4 +1,6 @@
 #include "utils.h"
+#include "GarbageBag.h"
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
@@ -78,4 +80,17 @@ auto collect_args(
     std::cout << std::endl;
 
     return input_values;
+}
+
+auto load_garbage_bags() -> std::vector<GarbageBag> {
+    auto bags = std::vector<GarbageBag>{};
+
+    auto data = std::fstream{"./data.txt", std::ios_base::in};
+
+    int weight;
+    while (data >> weight) {
+        bags.push_back(GarbageBag{weight});
+    }
+
+    return bags;
 }
